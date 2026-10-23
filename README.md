@@ -30,6 +30,7 @@ python ask.py
 ## Make it yours
 
 - Change `EVENT_FACTS` in `ask.py` to teach it about your own project.
+- Need ideas? See [`IDEAS.md`](IDEAS.md) for 10 starting points in each prize category.
 - Try the other model ID, or add an image to the request (Gemma 4 can read images too).
 - Turn it into a web app, a Discord bot or a voice assistant.
 
