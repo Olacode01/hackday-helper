@@ -7,11 +7,15 @@ Run:  python ask.py
 """
 import os
 import sys
+import time
 
 from google import genai
 
-# Gemma 4 model available through the Gemini API (see Google's Gemma docs).
-MODEL = "gemma-4-26b-a4b-it"
+# Gemma 4 models available through the Gemini API (see Google's Gemma docs).
+# If the first one keeps failing, the helper tries the next one.
+MODELS = ["gemma-4-26b-a4b-it", "gemma-4-31b-it"]
+MODEL = MODELS[0]
+TRIES_PER_MODEL = 2  # Google sometimes returns a temporary 500 error
 
 # Edit this to teach the helper about your own event.
 EVENT_FACTS = """
@@ -21,6 +25,7 @@ EVENT_FACTS = """
 - Free to attend, for students aged 18 and over.
 - Teams build projects with open-source or open-weight AI.
 - Submissions are made on the MLH platform before the deadline.
+- Hacktoberfest is a month-long October celebration of open-source software, run by DigitalOcean and Major League Hacking, where people make contributions to open-source projects.
 """
 
 
@@ -32,8 +37,16 @@ def ask(client: genai.Client, question: str) -> str:
         "If the answer is not in the facts, say you don't know.\n\n"
         f"Question: {question}"
     )
-    response = client.models.generate_content(model=MODEL, contents=prompt)
-    return response.text
+    last_error = None
+    for model in MODELS:
+        for attempt in range(TRIES_PER_MODEL):
+            try:
+                response = client.models.generate_content(model=model, contents=prompt)
+                return response.text
+            except Exception as err:  # temporary errors are common, so retry
+                last_error = err
+                time.sleep(2 * (attempt + 1))
+    raise last_error
 
 
 def main() -> None:
